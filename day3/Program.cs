@@ -14,7 +14,7 @@ foreach (var bank in banks)
   jolatege += jolts;
 }
 
-Console.WriteLine(jolatege);
+//Console.WriteLine(jolatege);
 
 // Part 2 - 12 batteries per bank
 long jolatege2 = 0;
@@ -42,4 +42,26 @@ foreach (var bank in banks)
   jolatege2 += jolts;
 }
 
-Console.WriteLine(jolatege2);
+
+//Console.WriteLine(jolatege2);
+
+Console.WriteLine(banks.Sum(bank => FindMax(0, 2, bank)));
+Console.WriteLine(banks.Sum(bank => FindMax(0, 12, bank)));
+
+
+long FindMax(int paddingLeft, int paddingRight, List<int> bank2)
+{
+  var bank = bank2.Skip(paddingLeft).SkipLast(paddingRight-2).ToList();
+
+  // find left value
+  int maxLeft = bank.SkipLast(1).Max();
+  int maxLeftIndex = bank.IndexOf(maxLeft)+1;
+  int maxRight = bank.Skip(maxLeftIndex).Max();
+  int maxRightIndex= bank.IndexOf(maxRight, maxLeftIndex)+1;
+
+  int jolts = maxLeft * 10 + maxRight;
+
+  return paddingRight > 2 
+    ? jolts * (long)Math.Pow(10, paddingRight - 2) + FindMax(paddingLeft + maxRightIndex, paddingRight - 2, bank2)
+    : jolts;
+}
