@@ -16,8 +16,6 @@ foreach (var bank in banks)
 
 Console.WriteLine(jolatege);
 
-Console.WriteLine("----------------------------------------------------------------------");
-
 // Part 2 - 12 batteries per bank
 long jolatege2 = 0;
 foreach (var bank in banks)
@@ -25,20 +23,23 @@ foreach (var bank in banks)
   var orderedBank = bank.OrderByDescending(b => b).ToList();
   
   long jolts = 0;
-  int lastIndex = 0;
+  int cursorPos = 0;
   for (long i = 12; i > 0; i--)
   {
-    int found = orderedBank.First(battery => bank.IndexOf(battery, lastIndex) != -1 && bank.Count - bank.IndexOf(battery, lastIndex) >= i);
-    jolts = jolts * 10 + found;
-    orderedBank.Remove(found);
-    lastIndex = bank.IndexOf(found, lastIndex)+1;
-  }
+    int found = orderedBank.First(battery => bank.Count - bank.IndexOf(battery, cursorPos) >= i);
+    int cursorNextPos = bank.IndexOf(found, cursorPos) + 1;
 
-  Console.WriteLine(jolts);
+    jolts = jolts * 10 + found;
+
+    // remove batteries between cursor positions
+    foreach (var rem in bank.Skip(cursorPos).Take(cursorNextPos - cursorPos))
+      orderedBank.Remove(rem);
+
+    // move cursor
+    cursorPos = cursorNextPos;
+  }
 
   jolatege2 += jolts;
 }
 
 Console.WriteLine(jolatege2);
-
-// 174263868434233 TOO HIGH
