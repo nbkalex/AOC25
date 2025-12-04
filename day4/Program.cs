@@ -9,20 +9,18 @@ var map = input.Select((line, lineIndex) => line.Select((p, pIndex) => (new Poin
 Console.WriteLine(GetRemovablePaper().Count());
 
 int totalPaper = 0;
-while(true)
-{
-  var removablePaper = GetRemovablePaper().ToList();
-  if(!removablePaper.Any())
-    break;
-
-  foreach (var paper in removablePaper)
-    map[paper.Key] = '.';
-
-  totalPaper += removablePaper.Count();
-}
+for (int removed = removed = RemovePaper(); removed != 0; removed = RemovePaper())
+  totalPaper += removed;
 
 Console.WriteLine(totalPaper);
 
+int RemovePaper()
+{
+  var removablePaper = GetRemovablePaper().ToList();
+  foreach (var paper in removablePaper)
+    map[paper.Key] = '.';
+  return removablePaper.Count();
+}
 
 IEnumerable<KeyValuePair<Point, char>> GetRemovablePaper()
 {
