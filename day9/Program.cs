@@ -6,18 +6,13 @@ var tiles = File.ReadAllLines("in.txt").Select(l => l.Split(",")).Select(l => (l
 long maxArea = 0;
 long maxArea2 = 0;
 
-HashSet<(long,long)> sides = new HashSet<(long, long)>();
+List<((long,long), (long, long))> sides = new List<((long, long), (long, long))>();
 for (int i = 0; i < tiles.Length; i++)
 {
   for (int j = i + 1; j < tiles.Length; j++)
   {
-    if (tiles[i].Item1 == tiles[j].Item1)
-      for(long k = Math.Min(tiles[i].Item2, tiles[j].Item2); k <= Math.Max(tiles[i].Item2, tiles[j].Item2); k++)
-        sides.Add((tiles[i].Item1, k));
-
-    if (tiles[i].Item2 == tiles[j].Item2)
-      for (long k = Math.Min(tiles[i].Item1, tiles[j].Item1); k <= Math.Max(tiles[i].Item1, tiles[j].Item1); k++)
-        sides.Add((k, tiles[i].Item2));
+    if (tiles[i].Item1 == tiles[j].Item1 || tiles[i].Item2 == tiles[j].Item2)
+      sides.Add((tiles[i], tiles[j]));
   }
 }
 
@@ -37,7 +32,7 @@ for (int i = 0; i < tiles.Length; i++)
     if(area < maxArea2)
       continue;
 
-    bool hasTileInside = sides.Any(m => IsInside(m, l, r, t, b));
+    bool hasTileInside = sides.Any(m => SideIsInside(m, l, r, t, b));
 
     if (!hasTileInside)
     {
@@ -59,3 +54,21 @@ bool IsInside((long, long) point, long l, long r, long top, long bot)
 {
   return IsBetween(point.Item1, l, r) && IsBetween(point.Item2, top, bot);
 }
+
+bool SideIsInside(((long, long), (long, long)) side, long l, long r, long top, long bot)
+{
+  bool isInside = IsInside(side.Item1, l,r,top,bot) || IsInside(side.Item2, l, r, top, bot);
+  if (isInside)
+    return true;
+
+  bool crossesVertically = side.Item1.Item1 == side.Item2.Item1;
+  if(crossesVertically)
+    return IsBetween(side.Item1.Item1, l, r) && Math.Min(side.Item1.Item2, side.Item2.Item2) <= top && Math.Max(side.Item1.Item2, side.Item2.Item2) >= bot;
+
+  bool crossesHorizontally = side.Item1.Item2 == side.Item2.Item2;
+  if(crossesHorizontally)
+    return IsBetween(side.Item1.Item2, top, bot) && Math.Min(side.Item1.Item1, side.Item2.Item1) <= l && Math.Max(side.Item1.Item1, side.Item2.Item1) >= r;
+
+  return false;
+}
+
