@@ -63,11 +63,15 @@ bool SideIsInside(((long, long), (long, long)) side, long l, long r, long top, l
 
   bool crossesVertically = side.Item1.Item1 == side.Item2.Item1;
   if(crossesVertically)
-    return IsBetween(side.Item1.Item1, l, r) && Math.Min(side.Item1.Item2, side.Item2.Item2) <= top && Math.Max(side.Item1.Item2, side.Item2.Item2) >= bot;
+    return IsBetween(side.Item1.Item1, l, r) 
+        && Math.Min(side.Item1.Item2, side.Item2.Item2) <= top 
+        && Math.Max(side.Item1.Item2, side.Item2.Item2) >= bot;
 
   bool crossesHorizontally = side.Item1.Item2 == side.Item2.Item2;
   if(crossesHorizontally)
-    return IsBetween(side.Item1.Item2, top, bot) && Math.Min(side.Item1.Item1, side.Item2.Item1) <= l && Math.Max(side.Item1.Item1, side.Item2.Item1) >= r;
+    return IsBetween(side.Item1.Item2, top, bot) 
+        && Math.Min(side.Item1.Item1, side.Item2.Item1) <= l 
+        && Math.Max(side.Item1.Item1, side.Item2.Item1) >= r;
 
   return false;
 }
