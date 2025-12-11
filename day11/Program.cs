@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Diagnostics.Metrics;
-
-var input = File.ReadAllLines("in.txt").Select(l => l.Split(": "))
+﻿var input = File.ReadAllLines("in.txt").Select(l => l.Split(": "))
                                        .ToDictionary(k => k[0], v => v[1].Split(" "));
 
 Console.WriteLine(GetPaths("you", "out"));
@@ -43,7 +40,7 @@ long GetPaths(string start, string end, string exclude = "")
     List<string> toPush = new();
     foreach (var neighbor in input[id])
     {
-      if(neighbor == exclude)
+      if (neighbor == exclude)
         continue;
 
       if (current.Contains(neighbor))
@@ -51,13 +48,10 @@ long GetPaths(string start, string end, string exclude = "")
 
       if (memo.ContainsKey(neighbor))
       {
-        if (memo.ContainsKey(neighbor))
-        {
-          if (memo.ContainsKey(id))
-            memo[id] += memo[neighbor];
-          else
-            memo[id] = memo[neighbor];
-        }
+        if (memo.ContainsKey(id))
+          memo[id] += memo[neighbor];
+        else
+          memo[id] = memo[neighbor];
 
         continue;
       }
