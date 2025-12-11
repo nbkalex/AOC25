@@ -84,88 +84,84 @@ foreach (var diagram in diagrams)
 
   sum += minSteps1;
 
-  var buttons2Copy = buttons2.ToList();
-  var orderedJoltages = joltages.OrderBy(j => j).ToArray();
-  List<int[]> orderedButtons = new();
-
-  foreach (var joltage in orderedJoltages)
+  // Part 2  
+  var ordered = joltages.OrderBy(j => j).ToArray();
+  List<(int[], int)> joltagesConfig = new(){(new int[joltages.Length], 0) };
+  int min = int.MaxValue;
+  foreach (var joltage in ordered)
   {
     int index = joltages.ToList().IndexOf(joltage);
-    foreach (var button in buttons2)
-    {
-      if (button.Contains(index) && buttons2Copy.Contains(button))
-      {
-        orderedButtons.Add(button);
-        buttons2Copy.Remove(button);
-      }
-    }
-  }
-
-  buttons2 = orderedButtons;
-
-  // Part 2
-  var q2 = new Stack<(List<int[]>, int[], List<int[]>)>();
-  q2.Push((new List<int[]>(), new int[joltages.Length], new(buttons2)));
-  var minSteps2 = int.MaxValue;
-  while (q2.Any())
-  {
-    var (currentButtons, currentJoltages, availableButtons) = q2.Pop();
-    if (currentButtons.Count > minSteps2)
+    var availableButtons = buttons2.Where(b => b.Contains(index)).ToList();
+    if(!availableButtons.Any())
       continue;
 
-    if (currentJoltages.SequenceEqual(joltages))
-    {
-      minSteps2 = Math.Min(minSteps2, currentButtons.Count);
-      continue;
-    }
+    var newJoltagesConfig = joltagesConfig.ToList();
+    Stack<(List<(int[], int)>, int)> q2 = new();
+    q2.Push((joltagesConfig, 0));
 
-    foreach (int[] button in availableButtons)
+    while (q2.Any())
     {
-      if (currentButtons.Contains(button))
+      var current = q2.Pop();
+
+      var currentConfigs = current.Item1;      
+      int index2 = current.Item2;
+      if(index2 == availableButtons.Count)
         continue;
 
-      int multiplier = 1;
-      List<(List<int[]>, int[], List<int[]>)> toAdd = new();
-      while (true)
+      List<(int[], int)> newConfigs = new();
+      foreach (var cfg in currentConfigs)
       {
-        int[] newJoltages = currentJoltages.ToArray();
-
-        List<int[]> newAvailableButtons = new(availableButtons);
-        bool stop = false;
-        foreach (var num in button)
+        for (int i = 0; i <= joltage - cfg.Item1[index]; i++)
         {
-          newJoltages[num] = newJoltages[num] + multiplier;
-          if (newJoltages[num] == joltages[num])
-            newAvailableButtons.RemoveAll(b => b.Contains(num));
-
-          if (newJoltages[num] > joltages[num])
-          {
-            newAvailableButtons.RemoveAll(b => b.Contains(num));
-            stop = true;
+          int newIndex= cfg.Item2 + i;
+            if(newIndex >= min)
             break;
+
+          bool stop = false;
+          int[] newCfg = cfg.Item1.ToArray();
+          foreach(var n in availableButtons[index2])
+          { 
+            newCfg[n] = newCfg[n] + i;
+            if(newCfg[n] > joltages[n])
+            {
+              stop =true;
+              break;
+            }
           }
+
+          if(stop)
+            break;
+
+          if (newCfg[index] == joltage)
+          {
+            if(newCfg.SequenceEqual(joltages))
+              min = Math.Min(min, newIndex);
+
+            if(newCfg.Zip(joltages).Any(c => c.First > c.Second))
+              break;
+
+            newJoltagesConfig.Add((newCfg, newIndex));
+            continue;
+          }
+
+          newConfigs.Add((newCfg, cfg.Item2 + i));
         }
-
-        if (stop)
-          break;
-
-        List<int[]> newButtons = new(currentButtons);
-        for (int i2 = 0; i2 < multiplier; i2++)
-          newButtons.Add(button);
-
-        toAdd.Add((newButtons, newJoltages, newAvailableButtons));
-
-        multiplier++;
       }
 
-      foreach (var item in toAdd)
-        q2.Push(item);
+      q2.Push((newConfigs, index2 + 1));
     }
+
+    foreach (var button in availableButtons)
+      buttons2.Remove(button);
+
+    joltagesConfig = newJoltagesConfig;
+
+    if (!buttons2.Any())
+      break;
   }
 
-  Console.WriteLine(minSteps2);
-
-  sum2 += minSteps2;
+  Console.WriteLine(min);
+  sum2 += min;
 }
 
 Console.WriteLine(sum);
