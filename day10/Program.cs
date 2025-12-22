@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Microsoft.Z3;
+using System.Collections;
 using System.Collections.Generic;
 
 var input = File.ReadAllLines("in.txt");
@@ -85,84 +86,42 @@ foreach (var diagram in diagrams)
   sum += minSteps1;
 
   // Part 2  
-  var ordered = joltages.OrderBy(j => j).ToArray();
-  List<(int[], int)> joltagesConfig = new(){(new int[joltages.Length], 0) };
-  int min = int.MaxValue;
-  foreach (var joltage in ordered)
-  {
-    int index = joltages.ToList().IndexOf(joltage);
-    var availableButtons = buttons2.Where(b => b.Contains(index)).ToList();
-    if(!availableButtons.Any())
-      continue;
+  Context z3 = new();
+  var solver = z3.MkOptimize();
+  var ctx = solver.Context;
 
-    var newJoltagesConfig = joltagesConfig.ToList();
-    Stack<(List<(int[], int)>, int)> q2 = new();
-    q2.Push((joltagesConfig, 0));
-
-    while (q2.Any())
-    {
-      var current = q2.Pop();
-
-      var currentConfigs = current.Item1;      
-      int index2 = current.Item2;
-      if(index2 == availableButtons.Count)
-        continue;
-
-      List<(int[], int)> newConfigs = new();
-      foreach (var cfg in currentConfigs)
-      {
-        for (int i = 0; i <= joltage - cfg.Item1[index]; i++)
-        {
-          int newIndex= cfg.Item2 + i;
-            if(newIndex >= min)
-            break;
-
-          bool stop = false;
-          int[] newCfg = cfg.Item1.ToArray();
-          foreach(var n in availableButtons[index2])
-          { 
-            newCfg[n] = newCfg[n] + i;
-            if(newCfg[n] > joltages[n])
-            {
-              stop =true;
-              break;
-            }
-          }
-
-          if(stop)
-            break;
-
-          if (newCfg[index] == joltage)
-          {
-            if(newCfg.SequenceEqual(joltages))
-              min = Math.Min(min, newIndex);
-
-            if(newCfg.Zip(joltages).Any(c => c.First > c.Second))
-              break;
-
-            newJoltagesConfig.Add((newCfg, newIndex));
-            continue;
-          }
-
-          newConfigs.Add((newCfg, cfg.Item2 + i));
-        }
-      }
-
-      q2.Push((newConfigs, index2 + 1));
-    }
-
-    foreach (var button in availableButtons)
-      buttons2.Remove(button);
-
-    joltagesConfig = newJoltagesConfig;
-
-    if (!buttons2.Any())
-      break;
+  List<ArithExpr> btnVars = new();
+  for (int i = 0; i < buttons2.Count; i++)
+  { 
+    btnVars.Add(ctx.MkConst("btn" + i, ctx.MkIntSort()) as ArithExpr);
+    solver.Assert(btnVars.Last() >= 0);
   }
 
-  Console.WriteLine(min);
-  sum2 += min;
+  var sumExpr = ctx.MkAdd(btnVars);
+
+  for (int ji = 0; ji < joltages.Length; ji++)
+  {
+    List<ArithExpr> eqCoefs = new();
+    for (int i = 0; i < buttons2.Count; i++)
+    {
+      if (buttons2[i].Contains(ji))
+        eqCoefs.Add(ctx.MkAdd(btnVars[i]));
+    }
+
+    solver.Assert(ctx.MkEq(ctx.MkAdd(eqCoefs), z3.MkInt(joltages[ji])));
+  }
+
+  var minSum = solver.MkMinimize(sumExpr);
+  var status = solver.Check();
+
+  var result = solver.Model.Evaluate(sumExpr);
+
+  
+  sum2 += ((IntNum)result).Int;
 }
 
 Console.WriteLine(sum);
 Console.WriteLine(sum2);
+
+// 20644 too high
+// 20684
